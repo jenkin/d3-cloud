@@ -10,6 +10,7 @@ var cloudRadians = Math.PI / 180,
 module.exports = function() {
   var size = [256, 256],
       text = cloudText,
+      center = cloudCenter,
       font = cloudFont,
       fontSize = cloudFontSize,
       fontStyle = cloudFontNormal,
@@ -38,12 +39,17 @@ module.exports = function() {
         tags = [],
         data = words.map(function(d, i) {
           d.text = text.call(this, d, i);
+          d.center = center.call(this, d, i) || [size[0]>>1,size[1]>>1];
           d.font = font.call(this, d, i);
           d.style = fontStyle.call(this, d, i);
           d.weight = fontWeight.call(this, d, i);
           d.rotate = rotate.call(this, d, i);
           d.size = ~~fontSize.call(this, d, i);
           d.padding = padding.call(this, d, i);
+          d.csize = [
+            Math.min(d.center[0],size[0]-d.center[0])*2-d.padding*2,
+            Math.min(d.center[1],size[1]-d.center[1])*2-d.padding*2
+          ];
           return d;
         }).sort(function(a, b) { return b.size - a.size; });
 
@@ -57,8 +63,8 @@ module.exports = function() {
       var start = Date.now();
       while (Date.now() - start < timeInterval && ++i < n && timer) {
         var d = data[i];
-        d.x = (size[0] * (random() + .5)) >> 1;
-        d.y = (size[1] * (random() + .5)) >> 1;
+        d.x = d.center[0] + ((random()-.5) >> 1) * d.csize[0];
+        d.y = d.center[1] + ((random()-.5) >> 1) * d.csize[1];
         cloudSprite(contextAndRatio, d, data, i);
         if (d.hasText && place(board, d, bounds)) {
           tags.push(d);
@@ -102,8 +108,8 @@ module.exports = function() {
     var perimeter = [{x: 0, y: 0}, {x: size[0], y: size[1]}],
         startX = tag.x,
         startY = tag.y,
-        maxDelta = Math.sqrt(size[0] * size[0] + size[1] * size[1]),
-        s = spiral(size),
+        maxDelta = Math.sqrt(tag.csize[0] * tag.csize[0] + tag.csize[1] * tag.csize[1]),
+        s = spiral(tag.csize),
         dt = random() < .5 ? 1 : -1,
         t = -dt,
         dxdy,
@@ -122,11 +128,11 @@ module.exports = function() {
       if (tag.x + tag.x0 < 0 || tag.y + tag.y0 < 0 ||
           tag.x + tag.x1 > size[0] || tag.y + tag.y1 > size[1]) continue;
       // TODO only check for collisions within current bounds.
-      if (!bounds || !cloudCollide(tag, board, size[0])) {
+      if (!bounds || !cloudCollide(tag, board, tag.csize[0])) {
         if (!bounds || collideRects(tag, bounds)) {
           var sprite = tag.sprite,
               w = tag.width >> 5,
-              sw = size[0] >> 5,
+              sw = tag.csize[0] >> 5,
               lx = tag.x - (w << 4),
               sx = lx & 0x7f,
               msx = 32 - sx,
@@ -180,6 +186,10 @@ module.exports = function() {
     return arguments.length ? (text = functor(_), cloud) : text;
   };
 
+  cloud.center = function(_) {
+    return arguments.length ? (center = functor(_), cloud) : center;
+  };
+
   cloud.spiral = function(_) {
     return arguments.length ? (spiral = spirals[_] || _, cloud) : spiral;
   };
@@ -206,6 +216,10 @@ module.exports = function() {
 
 function cloudText(d) {
   return d.text;
+}
+
+function cloudCenter(d) {
+    return d.center;
 }
 
 function cloudFont() {
