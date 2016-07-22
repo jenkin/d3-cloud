@@ -25,7 +25,8 @@ var layout = cloud()
       };
     }))
     .padding(5)
-    .rotate(function() { return ~~(Math.random() * 2) * 0; })
+    .ratio(1)
+    .rotate(function() { return ~~(Math.random() * 2) * 15; })
     .font("Impact")
     //.fontSize(function(d) { return Math.log(d.value)+10; })
     .on("end", draw);
@@ -50,6 +51,8 @@ function draw(words) {
       .attr("transform", function(d) {
         return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
       })
+      .text(function(d) { return d.text; })
+      .append("title")
       .text(function(d) { return d.text; });
 }
 
@@ -67,6 +70,7 @@ module.exports = function() {
   var size = [256, 256],
       text = cloudText,
       center = cloudCenter,
+      ratio = 0,
       font = cloudFont,
       fontSize = cloudFontSize,
       fontStyle = cloudFontNormal,
@@ -102,10 +106,15 @@ module.exports = function() {
           d.rotate = rotate.call(this, d, i);
           d.size = ~~fontSize.call(this, d, i);
           d.padding = padding.call(this, d, i);
-          d.csize = [
-            Math.min(d.center[0],size[0]-d.center[0])*2-d.padding*2,
-            Math.min(d.center[1],size[1]-d.center[1])*2-d.padding*2
-          ];
+          console.log(ratio);
+          var cSizeX = Math.min(d.center[0],size[0]-d.center[0])*2-d.padding*2,
+              cSizeY = Math.min(d.center[1],size[1]-d.center[1])*2-d.padding*2,
+              cSizeMin = Math.min(cSizeX,cSizeY);
+          if (ratio) {
+            d.csize = [cSizeMin,ratio*cSizeMin];
+          } else {
+            d.csize = [cSizeX,cSizeY];
+          }
           return d;
         }).sort(function(a, b) { return b.size - a.size; });
 
@@ -240,6 +249,10 @@ module.exports = function() {
 
   cloud.text = function(_) {
     return arguments.length ? (text = functor(_), cloud) : text;
+  };
+
+  cloud.ratio = function(_) {
+    return arguments.length ? (ratio = +_, cloud) : ratio;
   };
 
   cloud.center = function(_) {

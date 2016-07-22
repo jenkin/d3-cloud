@@ -24,7 +24,8 @@ var layout = cloud()
       };
     }))
     .padding(5)
-    .rotate(function() { return ~~(Math.random() * 2) * 0; })
+    .ratio(1)
+    .rotate(function() { return ~~(Math.random() * 2) * 15; })
     .font("Impact")
     //.fontSize(function(d) { return Math.log(d.value)+10; })
     .on("end", draw);
@@ -49,5 +50,7 @@ function draw(words) {
       .attr("transform", function(d) {
         return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
       })
+      .text(function(d) { return d.text; })
+      .append("title")
       .text(function(d) { return d.text; });
 }
