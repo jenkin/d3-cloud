@@ -39,6 +39,7 @@ module.exports = function() {
         i = -1,
         tags = [],
         data = words.map(function(d, i) {
+
           d.text = text.call(this, d, i);
           d.center = center.call(this, d, i) || [size[0]>>1,size[1]>>1];
           d.font = font.call(this, d, i);
@@ -47,15 +48,14 @@ module.exports = function() {
           d.rotate = rotate.call(this, d, i);
           d.size = ~~fontSize.call(this, d, i);
           d.padding = padding.call(this, d, i);
+
           var cSizeX = (Math.min(d.center[0],size[0]-d.center[0])-d.padding) << 1,
               cSizeY = (Math.min(d.center[1],size[1]-d.center[1])-d.padding) << 1,
               cSizeMin = Math.min(cSizeX,cSizeY);
-          if (square) {
-            d.csize = [cSizeMin,cSizeMin];
-          } else {
-            d.csize = [cSizeX,cSizeY];
-          }
+          d.csize = square ? [cSizeMin,cSizeMin] : [cSizeX,cSizeY];
+
           return d;
+
         }).sort(function(a, b) { return b.size - a.size; });
 
     if (timer) clearInterval(timer);
