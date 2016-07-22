@@ -24,7 +24,6 @@ var layout = cloud()
       };
     }))
     .padding(5)
-    .ratio(1)
     .rotate(function() { return ~~(Math.random() * 2) * 15; })
     .font("Impact")
     //.fontSize(function(d) { return Math.log(d.value)+10; })

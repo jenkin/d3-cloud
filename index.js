@@ -11,7 +11,7 @@ module.exports = function() {
   var size = [256, 256],
       text = cloudText,
       center = cloudCenter,
-      ratio = 0,
+      square = false,
       font = cloudFont,
       fontSize = cloudFontSize,
       fontStyle = cloudFontNormal,
@@ -47,12 +47,11 @@ module.exports = function() {
           d.rotate = rotate.call(this, d, i);
           d.size = ~~fontSize.call(this, d, i);
           d.padding = padding.call(this, d, i);
-          console.log(ratio);
-          var cSizeX = Math.min(d.center[0],size[0]-d.center[0])*2-d.padding*2,
-              cSizeY = Math.min(d.center[1],size[1]-d.center[1])*2-d.padding*2,
+          var cSizeX = (Math.min(d.center[0],size[0]-d.center[0])-d.padding) << 1,
+              cSizeY = (Math.min(d.center[1],size[1]-d.center[1])-d.padding) << 1,
               cSizeMin = Math.min(cSizeX,cSizeY);
-          if (ratio) {
-            d.csize = [cSizeMin,ratio*cSizeMin];
+          if (square) {
+            d.csize = [cSizeMin,cSizeMin];
           } else {
             d.csize = [cSizeX,cSizeY];
           }
@@ -192,8 +191,8 @@ module.exports = function() {
     return arguments.length ? (text = functor(_), cloud) : text;
   };
 
-  cloud.ratio = function(_) {
-    return arguments.length ? (ratio = +_, cloud) : ratio;
+  cloud.square = function(_) {
+    return arguments.length ? (square = _, cloud) : square;
   };
 
   cloud.center = function(_) {
