@@ -124,7 +124,7 @@ module.exports = function() {
           cSizeMinY = cSizeMinY < cSizeY ? cSizeMinY : cSizeY;
           cSizeMaxX = cSizeMaxX > cSizeX ? cSizeMaxX : cSizeX;
           cSizeMaxY = cSizeMaxY > cSizeY ? cSizeMaxY : cSizeY;
-          d.csize = square ? [cSizeMin,cSizeMin] : [cSizeX,cSizeY];
+          d.csize = [cSizeX,cSizeY];
 
           return d;
 
@@ -139,11 +139,11 @@ module.exports = function() {
     function step() {
       var start = Date.now();
       while (Date.now() - start < timeInterval && ++i < n && timer) {
-        var d = data[i];
-        d.csize = [
-          Math.min(d.csize[0], cSizeMinX + (cSizeMaxX - cSizeMinX) * limit),
-          Math.min(d.csize[1], cSizeMinY + (cSizeMaxY - cSizeMinY) * limit)
-        ];
+        var d = data[i],
+            cSizeX = Math.min(d.csize[0], cSizeMinX + (cSizeMaxX - cSizeMinX) * limit),
+            cSizeY = Math.min(d.csize[1], cSizeMinY + (cSizeMaxY - cSizeMinY) * limit),
+            cSizeMin = Math.min(cSizeX,cSizeY);
+        d.csize = square ? [cSizeMin,cSizeMin] : [cSizeX,cSizeY];
         d.x = d.center[0] + ((random()-.5) >> 1) * d.csize[0];
         d.y = d.center[1] + ((random()-.5) >> 1) * d.csize[1];
         cloudSprite(contextAndRatio, d, data, i);
