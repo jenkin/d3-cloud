@@ -11,23 +11,28 @@ var sc = d3.scale.category10(),
 
 var words = ["i","me","my","myself","we","us","our","ours","ourselves","you","your","yours","yourself","yourselves","he","him","his","himself","she","her","hers","herself","it","its","itself","they","them","their","theirs","themselves","what","which","who","whom","whose","this","that","these","those","am","is","are","was","were","be","been","being","have","has","had","having","do","does","did","doing","will","would","should","can","could","ought","i'm","you're","he's","she's","it's","we're","they're","i've","you've","we've","they've","i'd","you'd","he'd","she'd","we'd","they'd","i'll","you'll","he'll","she'll","we'll","they'll","isn't","aren't","wasn't","weren't","hasn't","haven't","hadn't","doesn't","don't","didn't","won't","wouldn't","shan't","shouldn't","can't","cannot","couldn't","mustn't","let's","that's","who's","what's","here's","there's","when's","where's","why's","how's","a","an","the","and","but","if","or","because","as","until","while","of","at","by","for","with","about","against","between","into","through","during","before","after","above","below","to","from","up","upon","down","in","out","on","off","over","under","again","further","then","once","here","there","when","where","why","how","all","any","both","each","few","more","most","other","some","such","no","nor","not","only","own","same","so","than","too","very","say","says","said","shall"];
 
+var data = words.map(function(d,i) {
+  var m = function(n) { return Math.random() < .5 ? n-1 : 1; },
+      n = 4,
+      c = [m(n),m(n)];
+  return {
+    text: d,
+    value: Math.random() * 500,
+    center: [c[0]*w/(n+1),c[1]*h/n],
+    cluster: ""+c[0]+c[1]
+  };
+});
+
+var s = d3.scale.sqrt().domain(d3.extent(data.map(function(d) { return d.value; }))).range([4,32]);
+
 var layout = cloud()
     .size([w, h])
-    .words(words.map(function(d,i) {
-      var m = function(n) { return Math.random() < .5 ? n-1 : 1; },
-          n = 4,
-          c = [m(n),m(n)];
-      return {
-        text: d,
-        value: Math.random() * 500,
-        center: [c[0]*w/n,c[1]*h/n],
-        cluster: ""+c[0]+c[1]
-      };
-    }))
+    .words(data)
     .padding(5)
-    .rotate(function() { return ~~(Math.random() * 2) * 15; })
+    .limit(0.5)
+    .rotate(function() { return ~~(Math.random() * 2) * 10; })
     .font("Impact")
-    //.fontSize(function(d) { return Math.log(d.value)+10; })
+    .fontSize(function(d) { return s(d.value); })
     .on("end", draw);
 
 layout.start();
@@ -70,6 +75,7 @@ module.exports = function() {
       text = cloudText,
       center = cloudCenter,
       square = false,
+      limit = 1,
       font = cloudFont,
       fontSize = cloudFontSize,
       fontStyle = cloudFontNormal,
@@ -96,6 +102,10 @@ module.exports = function() {
         n = words.length,
         i = -1,
         tags = [],
+        cSizeMinX = Infinity,
+        cSizeMinY = Infinity,
+        cSizeMaxX = 0,
+        cSizeMaxY = 0,
         data = words.map(function(d, i) {
 
           d.text = text.call(this, d, i);
@@ -110,6 +120,10 @@ module.exports = function() {
           var cSizeX = (Math.min(d.center[0],size[0]-d.center[0])-d.padding) << 1,
               cSizeY = (Math.min(d.center[1],size[1]-d.center[1])-d.padding) << 1,
               cSizeMin = Math.min(cSizeX,cSizeY);
+          cSizeMinX = cSizeMinX < cSizeX ? cSizeMinX : cSizeX;
+          cSizeMinY = cSizeMinY < cSizeY ? cSizeMinY : cSizeY;
+          cSizeMaxX = cSizeMaxX > cSizeX ? cSizeMaxX : cSizeX;
+          cSizeMaxY = cSizeMaxY > cSizeY ? cSizeMaxY : cSizeY;
           d.csize = square ? [cSizeMin,cSizeMin] : [cSizeX,cSizeY];
 
           return d;
@@ -126,6 +140,10 @@ module.exports = function() {
       var start = Date.now();
       while (Date.now() - start < timeInterval && ++i < n && timer) {
         var d = data[i];
+        d.csize = [
+          Math.min(d.csize[0], cSizeMinX + (cSizeMaxX - cSizeMinX) * limit),
+          Math.min(d.csize[1], cSizeMinY + (cSizeMaxY - cSizeMinY) * limit)
+        ];
         d.x = d.center[0] + ((random()-.5) >> 1) * d.csize[0];
         d.y = d.center[1] + ((random()-.5) >> 1) * d.csize[1];
         cloudSprite(contextAndRatio, d, data, i);
@@ -247,6 +265,10 @@ module.exports = function() {
 
   cloud.text = function(_) {
     return arguments.length ? (text = functor(_), cloud) : text;
+  };
+
+  cloud.limit = function(_) {
+    return arguments.length ? (limit = +_, cloud) : limit;
   };
 
   cloud.square = function(_) {

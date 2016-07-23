@@ -12,6 +12,7 @@ module.exports = function() {
       text = cloudText,
       center = cloudCenter,
       square = false,
+      limit = 1,
       font = cloudFont,
       fontSize = cloudFontSize,
       fontStyle = cloudFontNormal,
@@ -38,6 +39,10 @@ module.exports = function() {
         n = words.length,
         i = -1,
         tags = [],
+        cSizeMinX = Infinity,
+        cSizeMinY = Infinity,
+        cSizeMaxX = 0,
+        cSizeMaxY = 0,
         data = words.map(function(d, i) {
 
           d.text = text.call(this, d, i);
@@ -52,6 +57,10 @@ module.exports = function() {
           var cSizeX = (Math.min(d.center[0],size[0]-d.center[0])-d.padding) << 1,
               cSizeY = (Math.min(d.center[1],size[1]-d.center[1])-d.padding) << 1,
               cSizeMin = Math.min(cSizeX,cSizeY);
+          cSizeMinX = cSizeMinX < cSizeX ? cSizeMinX : cSizeX;
+          cSizeMinY = cSizeMinY < cSizeY ? cSizeMinY : cSizeY;
+          cSizeMaxX = cSizeMaxX > cSizeX ? cSizeMaxX : cSizeX;
+          cSizeMaxY = cSizeMaxY > cSizeY ? cSizeMaxY : cSizeY;
           d.csize = square ? [cSizeMin,cSizeMin] : [cSizeX,cSizeY];
 
           return d;
@@ -68,6 +77,10 @@ module.exports = function() {
       var start = Date.now();
       while (Date.now() - start < timeInterval && ++i < n && timer) {
         var d = data[i];
+        d.csize = [
+          Math.min(d.csize[0], cSizeMinX + (cSizeMaxX - cSizeMinX) * limit),
+          Math.min(d.csize[1], cSizeMinY + (cSizeMaxY - cSizeMinY) * limit)
+        ];
         d.x = d.center[0] + ((random()-.5) >> 1) * d.csize[0];
         d.y = d.center[1] + ((random()-.5) >> 1) * d.csize[1];
         cloudSprite(contextAndRatio, d, data, i);
@@ -189,6 +202,10 @@ module.exports = function() {
 
   cloud.text = function(_) {
     return arguments.length ? (text = functor(_), cloud) : text;
+  };
+
+  cloud.limit = function(_) {
+    return arguments.length ? (limit = +_, cloud) : limit;
   };
 
   cloud.square = function(_) {
